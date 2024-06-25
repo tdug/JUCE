@@ -1,0 +1,32 @@
+name: Build Examples
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_examples:
+    strategy:
+      matrix: 
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Intsall Linux Dependencies
+      if: runner.os == 'Linux'
+      run: .github/scripts/install-debian-deps.sh
+    
+    - name: Update XCode
+      if: runner.os == 'macos'
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Configure CMake
+      run: cmake . -B cmake-build -DJUCE_BUILD_EXAMPLES=ON -DJUCE_BUILD_EXTRAS=ON
+
+    - name: Build Examples
+      run: cmake --build cmake-build
